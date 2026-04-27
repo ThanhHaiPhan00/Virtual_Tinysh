@@ -1,0 +1,40 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "my C Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/gcc_build/vir_tinysh.exe", //chinh ten file thuc thi .exe o day
+            "stopAtEntry": true,
+            //Config phai duoi chi dung de debug cho embdedded,(remote debug/debugserver), neu debug tren PC thi khong can
+            // "customLaunchSetupCommands": [
+            //     { "text": "target-run", "description": "run target", "ignoreFailures": false }
+            // ],
+            // "launchCompleteCommand": "exec-run",
+            //Viet de co the su dung tren nhieu he dieu hanh
+            "environment": [],
+            "externalConsole": false, //true de mo console rieng, false de dung console cua vscode
+             "MIMode": "gdb",
+            "linux": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            },
+            "osx": {
+                "MIMode": "lldb"
+            },
+            "windows": {
+                "MIMode": "gdb",
+                "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe" //cai dung dia chi cua gdb da cai dat
+            },
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

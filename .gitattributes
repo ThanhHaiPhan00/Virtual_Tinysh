@@ -1,0 +1,11 @@
+# git khong convert line ending
+* -text
+
+# Giữ nguyên LF cho tất cả file
+#* text eol=lf
+
+# Force LF cho file cu the
+#*.c text eol=lf
+#*.h text eol=lf
+#*.s text eol=lf
+#*.ld text eol=lf

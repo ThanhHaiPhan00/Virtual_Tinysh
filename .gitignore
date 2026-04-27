@@ -1,0 +1,17 @@
+# Build files
+build/
+gcc_build/
+Debug/
+Release/
+
+# IDE
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Binary
+*.elf
+*.bin
+*.hex
