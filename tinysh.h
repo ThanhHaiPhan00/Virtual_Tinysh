@@ -23,6 +23,10 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+ #define LF_END "\n"
+ #define CR_END "\r"
+ #define CRLF_END "\r\n"
+ #define TINYSH_ENDLINE CRLF_END
 typedef void (*tinysh_fnt_t)(int argc, char **argv); //Dinh nghia con tro ham voi cac bien dau vao la argument count va mot vector argument, theo dinh nghia ham trong file .c argv[0] mac dinh la ten command
 
 typedef struct tinysh_cmd_t {

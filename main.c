@@ -50,13 +50,30 @@ tinysh_cmd_t mymathcmd={
     0
 };
 
+static void fixmath_fnt(int argc, char **argv)
+{
+  printf("Fix math command called\n");
+  display_args(argc,argv);
+}
+
+tinysh_cmd_t myfixmathcmd={
+    .parent = &mymathcmd, //Gan myfixmathcmd la child command cua mymathcmd
+    "Fixmath",
+    "Fix math command",
+    "[args]",
+    fixmath_fnt,
+    0,
+    0,
+    0
+};
+
 static void tinh_1_cong_2(int argc, char **argv)
 {
     printf("Tong 1 va 2 la: %d\n", 1 + 2);
 }
 
 tinysh_cmd_t cong_1_va_2 = {
-    .parent = &mymathcmd, 
+    .parent = &myfixmathcmd, 
     .name = "tong_1_va_2", 
     .help = "tinh tong giua 1 va 2",
     .usage = "[args]",
@@ -72,7 +89,7 @@ static void tinh_2_cong_3(int argc, char **argv)
 }
 
 tinysh_cmd_t cong_2_va_3 = {
-    .parent = &mymathcmd, 
+    .parent = &myfixmathcmd, 
     .name = "tong_2_va_3", 
     .help = "tinh tong giua 2 va 3",
     .usage = "[args]",
@@ -112,6 +129,7 @@ int main(void)
     /* add the top level command */
     tinysh_add_command(&myfoocmd);
     tinysh_add_command(&mymathcmd);
+    tinysh_add_command(&myfixmathcmd);
 
     /* add sub commands */
     tinysh_add_command(&cong_1_va_2);

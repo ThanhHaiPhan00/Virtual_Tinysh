@@ -50,8 +50,16 @@ typedef unsigned char uchar;
 
 static void help_fnt(int argc, char **argv);
 
-static tinysh_cmd_t help_cmd={ 
-  0,"help","display help","<cr>",help_fnt,0,0,0 };
+static tinysh_cmd_t help_cmd={
+  .parent = 0,
+  .name = "help",
+  .help = "display help",
+  .usage = "<cr>",
+  .function = help_fnt,
+  .arg = 0,
+  .next = 0,
+  .child = 0
+};
 
 static uchar input_buffers[HISTORY_DEPTH][BUFFER_SIZE+1]={0};
 static uchar trash_buffer[BUFFER_SIZE+1]={0};
@@ -84,14 +92,15 @@ static void puts(char *s)
  */
 static void help_fnt(int argc, char **argv)
 {
-  puts("?            display help on given or available commands\n");
-  puts("<TAB>        auto-completion\n");
-  puts("<cr>         execute command line\n");
-  puts("CTRL-P       recall previous input line\n");
-  puts("CTRL-N       recall next input line\n");
-  puts("/            back to the top level\n");
-  puts("<            back to the prior level\n");
-  puts("<any>        treat as input character\n");
+  puts(TINYSH_ENDLINE);
+  puts("?            display help on given or available commands" TINYSH_ENDLINE);
+  puts("<TAB>        auto-completion" TINYSH_ENDLINE);
+  puts("<cr>         execute command line" TINYSH_ENDLINE);
+  puts("CTRL-P       recall previous input line" TINYSH_ENDLINE);
+  puts("CTRL-N       recall next input line" TINYSH_ENDLINE);
+  puts("/            back to the top level" TINYSH_ENDLINE);
+  puts("<            back to the prior level" TINYSH_ENDLINE);
+  puts("<any>        treat as input character" TINYSH_ENDLINE);
 }
 
 /*
@@ -186,6 +195,9 @@ static int parse_command(tinysh_cmd_t **_cmd, uchar **_str)
  */
 static void do_context(tinysh_cmd_t *cmd, uchar *str)
 {
+  /* Bo sung ky tu "> " giua cac context de de phan biet khi in ra Terminal*/
+  context_buffer[cur_context++]='>';
+  context_buffer[cur_context++]=' ';
   while(*str) 
     context_buffer[cur_context++]=*str++;
   context_buffer[cur_context]=0;
@@ -267,14 +279,14 @@ static int exec_command_line(tinysh_cmd_t *cmd, uchar *_str)
         {
           puts("ambiguity: ");
           puts((char *)(str));
-          putchar('\n');
+          puts(TINYSH_ENDLINE);
           return 0;
         }
       else if(ret==UNMATCH) /* UNMATCH */
         {
           puts("no match: ");
           puts((char *)(str));
-          putchar('\n');
+          puts(TINYSH_ENDLINE);
           return 0;
         }
       else /* NULLMATCH */
@@ -289,7 +301,7 @@ static void display_child_help(tinysh_cmd_t *cmd)
   tinysh_cmd_t *cm;
   int len=0;
 
-  putchar('\n');
+  puts(TINYSH_ENDLINE);
   for(cm=cmd;cm;cm=cm->next)
     if(len<strlen((uchar *)(cm->name)))
       len=strlen((uchar *)(cm->name));
@@ -301,7 +313,7 @@ static void display_child_help(tinysh_cmd_t *cmd)
         for(i=strlen((uchar *)(cm->name));i<len+2;i++)
           putchar(' ');
         puts((char *)(cm->help));
-        putchar('\n');
+        puts(TINYSH_ENDLINE);
       }
 }
 
@@ -334,7 +346,7 @@ static int help_command_line(tinysh_cmd_t *cmd, uchar *_str)
                 puts(cmd->help);
               else
                 puts("no help available");
-              putchar('\n');
+              puts(TINYSH_ENDLINE);
             }
           return 0;
         }
@@ -344,22 +356,22 @@ static int help_command_line(tinysh_cmd_t *cmd, uchar *_str)
         }
       else if(ret==AMBIG)
         {
-          puts("\nambiguity: ");
+          puts(TINYSH_ENDLINE "ambiguity: ");
           puts((char *)(str));
-          putchar('\n');
+          puts(TINYSH_ENDLINE);
           return 0;
         }
       else if(ret==UNMATCH)
         {
-          puts("\nno match: ");
+          puts(TINYSH_ENDLINE "no match: ");
           puts((char *)(str));
-          putchar('\n');
+          puts(TINYSH_ENDLINE);
           return 0;
         }
       else /* NULLMATCH */
         {
           if(cur_cmd_ctx)
-            display_child_help(cur_cmd_ctx->child);
+            display_child_help(cur_cmd_ctx->child?cur_cmd_ctx->child:(cur_cmd_ctx->parent?cur_cmd_ctx->parent:root_cmd));
           else
             display_child_help(root_cmd);
           return 0;
@@ -407,7 +419,7 @@ static int complete_command_line(tinysh_cmd_t *cmd, uchar *_str)
                       if(cmd->usage)
                         {
                           puts(cmd->usage);
-                          putchar('\n');
+                          puts(TINYSH_ENDLINE);
                           return 1;
                         }
                       else
@@ -442,14 +454,14 @@ static int complete_command_line(tinysh_cmd_t *cmd, uchar *_str)
             {
               if(_str_len==common_len)
                 {
-                  putchar('\n');
+                  puts(TINYSH_ENDLINE);
                   for(cm=cmd;cm;cm=cm->next)
                     {
                       int r=strstart((uchar *)(cm->name),(uchar *)(__str));
                       if(r==FULLMATCH || r==PARTMATCH)
                         {
                           puts(cm->name);
-                          putchar('\n');
+                          puts(TINYSH_ENDLINE);
                         }
                     }
                   return 1;
@@ -502,7 +514,7 @@ static void _tinysh_char_in(uchar c)
       while(*line && *line==' ') line++;
       if(*line) /* not empty line */
         {
-          cmd=cur_cmd_ctx?cur_cmd_ctx->child:root_cmd; //Gan command mac dinh la child command dau tien trong command context sau do doi chieu lan luot voi command line, neu khong co context mac dinh trong thu vien la help command
+          cmd=cur_cmd_ctx?(cur_cmd_ctx->child?cur_cmd_ctx->child:root_cmd):root_cmd; //Gan command mac dinh la child command dau tien trong command context sau do doi chieu lan luot voi command line, neu khong co context mac dinh trong thu vien la help command
           exec_command_line(cmd,line);
           cur_buf_index=(cur_buf_index+1)%HISTORY_DEPTH; //sang command line moi
           cur_index=0; //Reset chi so hien tai trong input buffer
@@ -564,7 +576,7 @@ static void _tinysh_char_in(uchar c)
   else if(c=='?') /* display help */
     {
       tinysh_cmd_t *cmd;
-      cmd=cur_cmd_ctx?cur_cmd_ctx->child:root_cmd;
+      cmd=cur_cmd_ctx?(cur_cmd_ctx->child?cur_cmd_ctx->child:root_cmd):root_cmd;
       help_command_line(cmd,line);
       start_of_line();
       puts((char *)(line));
@@ -573,7 +585,7 @@ static void _tinysh_char_in(uchar c)
   else if(c==9 || c=='!') /* TAB: autocompletion */
     {
       tinysh_cmd_t *cmd;
-      cmd=cur_cmd_ctx?cur_cmd_ctx->child:root_cmd;
+      cmd=cur_cmd_ctx?(cur_cmd_ctx->child?cur_cmd_ctx->child:root_cmd):root_cmd;
       if(complete_command_line(cmd,line))
         {
           start_of_line();
@@ -583,11 +595,23 @@ static void _tinysh_char_in(uchar c)
     }
   else if(c == BACKCHAR) /* <: return to the prior context*/
   {
-      if(echo)
-        putchar(c);
+    /* first, echo the newline */
+    if(echo) //Mot so terminal khong hien thi ky tu khi nguoi dung nhap vao, do do can den echo de hien thi ky tu ma nguoi dung dang nhap, tuy chon co hoac khong co san trong thu vien
+      putchar(c);
+    /*xuong dong moi tren terminal*/
+    puts(TINYSH_ENDLINE);
 
-      cur_context=0;
-      cur_cmd_ctx=0;
+    for (int i = strlen((uchar *)(cur_cmd_ctx->name)) + 2; i>0; i--) //Xoa context hien tai tren terminal, bao gom ten command va ky tu '> '
+    {
+      context_buffer[--cur_context]=0; //Xoa context hien tai trong context buffer, bao gom ten command va ky tu '> '
+    }
+    start_of_line();
+    
+    cur_cmd_ctx=cur_cmd_ctx->parent?(cur_cmd_ctx->parent):root_cmd; //Tro ve command context cha cua context hien tai, neu da o top level thi van o top level
+    //exec_command_line(cmd,line);
+    cur_buf_index=(cur_buf_index+1)%HISTORY_DEPTH; //sang command line moi
+    cur_index=0; //Reset chi so hien tai trong input buffer
+    input_buffers[cur_buf_index][0]=0;
   }      
   else /* any input character */
     {
